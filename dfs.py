@@ -1,4 +1,5 @@
 # DFS full search solution to a single game
+# only works (in a reasonable time) for games of at most 20 cells
 
 from game import *
 

@@ -7,6 +7,7 @@ class Bitset:
     """
     Efficient implementation of a binary matrix.
     """
+
     def __init__(self, m, n):
         self.inverted = False
         self.rows = m
@@ -61,9 +62,30 @@ class Bitset:
         if self.rows != other.rows or self.columns != other.columns: return false
         return all((self.table == other.table).flatten())
 
+    def save(self, filename: str):
+        with open(filename, 'w') as file:
+            file.write("{} {}\n".format(self.rows, self.columns))
+            file.write(str(self))
+
+    @staticmethod
+    def load(filename: str):
+        with open(filename) as file:
+            r, c = [int(x) for x in file.readline().strip().split()]
+            b = Bitset(r, c)
+            ctr = 0
+            while ctr < r:
+                l = file.readline(c + 1).strip()
+                start = 0
+                while l.find('X', start) >= 0:
+                    pos = l.index('X', start)
+                    b[ctr, pos] = True
+                    start = pos + 1
+                ctr += 1
+            return b
+
 
 if __name__ == "__main__":
-    a = Bitset(200, 5)
+    a = Bitset(6, 5)
     print(a.rows, a.columns)
     a[2, 2] = True
     a[0, 1] = True
@@ -71,5 +93,7 @@ if __name__ == "__main__":
     a[0, 1] = False
     print(a[0, 1])
     a[2, 0] = True
-    a[150, 4] = True
-    print(a.table)
+    a.save('test_board')
+    print(a)
+    b = Bitset.load('test_board')
+    print('-----------------', b, sep='\n')
