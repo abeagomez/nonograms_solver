@@ -4,28 +4,30 @@ import numpy as np
 
 
 class Game:
-    def __init__(self, board: Bitset = None, n: int = None, m: int = None):
-        if board:
+    def __init__(self, board: Bitset, n: int, m: int, lists: list = None):
+        if lists:
+            self.lists = lists
+        elif board:
             self.lists = generate_game(board)
-        elif n is not None and m is not None:
-            b = generate_board(n, m)
+            n, m = board.rows, board.columns
+        else:
+            board = generate_board(n, m)
             self.lists = generate_game(b)
 
-    @staticmethod
-    def __from_lists(lists: list):
-        g = Game()
-        g.lists = lists
-        return g
+        self.rows = n
+        self.colums = m
 
     def save(self, filename: str):
         with open(filename, 'w')  as file:
-            json.dump(self.lists, file)
+            json.dump(
+                {'l': self.lists, 'rows': self.rows, 'columns': self.colums},
+                file)
 
     @staticmethod
     def load(filename: str):
         with open(filename) as file:
             l = json.load(file)
-            return Game.__from_lists(l)
+            return Game(None, n=l['rows'], m=l['columns'], lists=l['l'])
 
     def print(self):
         k = '\t' + '\t'.join(map(lambda x: str(x), self.lists[1]))
@@ -41,7 +43,7 @@ class Game:
 
 if __name__ == '__main__':
     b = generate_board(5, 5)
-    g = Game(b)
+    g = Game(b, 5, 5)
     g.save('pepe.game')
     g = Game.load('pepe.game')
     print(g.check(b))
