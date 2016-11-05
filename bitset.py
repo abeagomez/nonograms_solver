@@ -40,18 +40,18 @@ class Bitset:
             self.table[item[0]][pos] ^= (1 << offset)
 
     def print(self):
-        b = self.to_bool_array()
-        for i in b:
-            print(i)
+        print(self)
 
-    def to_bool_array(self):
+    def __str__(self):
         arr = []
         for i in range(self.rows):
             l = []
             for j in range(self.columns):
                 l.append(self[i, j])
             arr.append(l)
-        return arr
+        p = '\n'.join(''.join(map(lambda x: 'X' if x else '.', l)) for l in arr)
+        return p
+
 
 if __name__ == "__main__":
     a = Bitset(200, 5)

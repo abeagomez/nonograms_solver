@@ -1,5 +1,6 @@
 from generator import *
 import json
+import numpy as np
 
 
 class Game:
@@ -7,20 +8,21 @@ class Game:
         if board:
             self.lists = generate_game(board)
         elif n is not None and m is not None:
-            self.lists = generate_game(generate_board(n, m))
+            b = generate_board(n, m)
+            self.lists = generate_game(b)
 
     @staticmethod
-    def __from_lists(lists):
+    def __from_lists(lists: list):
         g = Game()
         g.lists = lists
         return g
 
-    def save(self, filename):
+    def save(self, filename: str):
         with open(filename, 'w')  as file:
             json.dump(self.lists, file)
 
     @staticmethod
-    def load(filename):
+    def load(filename: str):
         with open(filename) as file:
             l = json.load(file)
             return Game.__from_lists(l)
@@ -31,11 +33,15 @@ class Game:
         for i in self.lists[0]:
             print(i)
 
-    def check(self, board:Bitset):
-        pass
+    def check(self, board: Bitset):
+        l = np.array(generate_game(board))
+        k = np.array(self.lists)
+        return all([all(g) for g in (l == k)])
+
 
 if __name__ == '__main__':
-    g = Game(n=5, m=5)
+    b = generate_board(5, 5)
+    g = Game(b)
     g.save('pepe.game')
     g = Game.load('pepe.game')
-    g.print()
+    print(g.check(b))
