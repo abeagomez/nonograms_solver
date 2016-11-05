@@ -4,6 +4,9 @@ int = np.int64
 
 
 class Bitset:
+    """
+    Efficient implementation of a binary matrix.
+    """
     def __init__(self, m, n):
         self.inverted = False
         self.rows = m

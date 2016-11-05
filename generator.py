@@ -3,6 +3,9 @@ from bitset import Bitset
 
 
 def generate_board(n: int, m: int):
+    """
+    Generates a random matrix of NxM cells where every cell has a 50% probablility of being marked or not.
+    """
     b = Bitset(n, m)
     for i in range(n):
         for j in range(m):
@@ -12,6 +15,9 @@ def generate_board(n: int, m: int):
 
 
 def generate_game(board: Bitset):
+    """
+    Given a fixed board, generates the Picross Game representation.
+    """
     hor = []
     ver = []
     for i in range(board.rows):

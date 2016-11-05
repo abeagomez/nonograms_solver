@@ -1,28 +1,11 @@
-from game import *
-
-
-def dfs_solve(game: Game):
-    return dfs(game, Bitset(game.rows, game.columns))
-
-
-def dfs(game: Game, board: Bitset, pos: int = 0):
-    if pos == game.rows * game.columns:
-        if game.check(board):
-            return board
-        return None
-    row = pos // board.columns
-    column = pos % board.columns
-    board[row, column] = True
-    r = dfs(game, board, pos + 1)
-    if r: return r
-    board[row, column] = False
-    r = dfs(game, board, pos + 1)
-    if r: return r
-    return None
-
+from dfs import dfs_solve
+from sa import sa_solve
 
 if __name__ == '__main__':
     import time
+    from generator import generate_board, generate_game
+    from game import Game
+    import random as rd
 
     while True:
         # a = time.time()

@@ -4,6 +4,10 @@ import numpy as np
 
 
 class Game:
+    """
+    Representation of a Picross Game
+    """
+
     def __init__(self, board: Bitset, n: int = None, m: int = None, lists: list = None):
         if lists:
             self.lists = lists
@@ -42,6 +46,9 @@ class Game:
         if isinstance(b, np.bool_) or isinstance(b, bool):
             return b
         return all((l == k).flatten())
+
+    def eval(self, board: Bitset):
+        pass
 
 
 if __name__ == '__main__':
