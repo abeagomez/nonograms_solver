@@ -38,12 +38,14 @@ class Game:
     def check(self, board: Bitset):
         l = np.array(generate_game(board))
         k = np.array(self.lists)
-        return all([all(g) for g in (l == k)])
-
+        if board.rows == board.columns:
+            return all([all(g) for g in (l  == k)])
+        else:
+            return all(l==k)
 
 if __name__ == '__main__':
-    b = generate_board(5, 5)
-    g = Game(b, 5, 5)
+    b = generate_board(50, 4)
+    g = Game(b, 50, 4)
     g.save('pepe.game')
     g = Game.load('pepe.game')
     print(g.check(b))
