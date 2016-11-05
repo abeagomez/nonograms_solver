@@ -52,6 +52,12 @@ class Bitset:
         p = '\n'.join(''.join(map(lambda x: 'X' if x else '.', l)) for l in arr)
         return p
 
+    def __eq__(self, other):
+        if not isinstance(other, Bitset):
+            return False
+        if self.rows != other.rows or self.columns != other.columns: return false
+        return all((self.table == other.table).flatten())
+
 
 if __name__ == "__main__":
     a = Bitset(200, 5)

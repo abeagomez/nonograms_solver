@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Game:
-    def __init__(self, board: Bitset, n: int, m: int, lists: list = None):
+    def __init__(self, board: Bitset, n: int = None, m: int = None, lists: list = None):
         if lists:
             self.lists = lists
         elif board:
@@ -15,12 +15,12 @@ class Game:
             self.lists = generate_game(b)
 
         self.rows = n
-        self.colums = m
+        self.columns = m
 
     def save(self, filename: str):
         with open(filename, 'w')  as file:
             json.dump(
-                {'l': self.lists, 'rows': self.rows, 'columns': self.colums},
+                {'l': self.lists, 'rows': self.rows, 'columns': self.columns},
                 file)
 
     @staticmethod
@@ -38,10 +38,11 @@ class Game:
     def check(self, board: Bitset):
         l = np.array(generate_game(board))
         k = np.array(self.lists)
-        if board.rows == board.columns:
-            return all([all(g) for g in (l  == k)])
-        else:
-            return all(l==k)
+        b = (l == k)
+        if isinstance(b, np.bool_) or isinstance(b, bool):
+            return b
+        return all((l == k).flatten())
+
 
 if __name__ == '__main__':
     b = generate_board(50, 4)
