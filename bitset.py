@@ -1,7 +1,5 @@
 import numpy as np
 
-int = np.int64
-
 
 class Bitset:
     """
@@ -16,8 +14,7 @@ class Bitset:
             self.inverted = True
         if self.inverted:
             n, m = m, n
-        k = int(np.ceil(n / 64))
-        self.table = np.zeros((m, k), np.int64)
+        self.table = np.zeros((m,), int)
 
     def __getitem__(self, item):
         if not isinstance(item, tuple) or len(item) < 2: raise ValueError()
@@ -28,6 +25,8 @@ class Bitset:
         if self.inverted:
             item = item[1], item[0]
 
+        return bool(self.table[item[0]] & 1 << item[1])
+
         pos, offset = int(item[1] / 64), int(item[1] % 64)
         return (self.table[item[0]][pos] & (1 << offset)) != 0
 
@@ -36,12 +35,12 @@ class Bitset:
             raise IndexError("Index out of bounds")
         if self.inverted:
             item = item[1], item[0]
-
-        pos, offset = int(item[1] / 64), int(item[1] % 64)
+        offset = int(item[1] % 64)
+        mask = 1 << offset
         if value == True:
-            self.table[item[0]][pos] |= (1 << offset)
-        elif self.table[item[0]][pos] & (1 << offset) != 0:
-            self.table[item[0]][pos] ^= (1 << offset)
+            self.table[item[0]] |= mask
+        elif bool(self.table[item[0]] & mask):
+            self.table[item[0]] ^= mask
 
     def print(self):
         print(self)
@@ -87,6 +86,7 @@ class Bitset:
 if __name__ == "__main__":
     a = Bitset(6, 5)
     print(a.rows, a.columns)
+    print(a[0, 0])
     a[2, 2] = True
     a[0, 1] = True
     print(a[2, 2], a[0, 1], a[3, 3])
