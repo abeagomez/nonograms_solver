@@ -43,14 +43,16 @@ class Game:
         return self.check_horizontal(board) and self.check_vertical(board)
 
     def check_horizontal(self, board: Bitset):
-        h, _ = np.array(generate_game(board))
-        k = np.array(self.lists[0])
+        h, _ = generate_game(board)
+        h = np.array(h)
+        k = np.asarray(self.lists[0])
         b = (h == k)
         if isinstance(b, bool): return b
         return all(b.flatten())
 
     def check_vertical(self, board: Bitset):
-        _, v = np.array(generate_game(board))
+        _, v = generate_game(board)
+        v = np.array(v)
         k = np.array(self.lists[1])
         b = (v == k)
         if isinstance(b, bool): return b

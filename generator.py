@@ -2,6 +2,9 @@ import random as rd
 from bitset import Bitset
 
 
+# import numpy as np
+
+
 def generate_board(n: int, m: int):
     """
     Generates a random matrix of NxM cells where every cell has a 50% probablility of being marked or not.

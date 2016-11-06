@@ -56,10 +56,17 @@ def ls_solve(game: Game):
 if __name__ == '__main__':
     from generator import generate_board
 
-    board = generate_board(4, 10)
+    board = generate_board(5, 5)
+    # board = Bitset(2, 2)
+    # board[0, 1] = True
+    # board[1, 0] = True
     game = Game(board)
     sol = ls_generate_initial(game)
     board2 = board_from_solution(game, sol)
     game.print()
+    # board2 = Bitset(2, 2)
+    # board2[0, 1] = True
+    # board2[1, 1] = True
     print(board, board2, sep='\n\n')
     print(game.check_horizontal(board2))
+    print(game.check_vertical(board2))
