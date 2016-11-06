@@ -3,6 +3,7 @@ from bitset import Bitset
 from generator import generate_board
 from game import Game
 from solvers import dfs_solve
+from ls import ls_generate_initial, board_from_solution
 
 
 class BitsetTest(unittest.TestCase):
@@ -84,6 +85,17 @@ class DFSTest(unittest.TestCase):
     def test_dfs_solve(self):
         ans = dfs_solve(self.game)
         self.assertTrue(self.game.check(ans))
+
+
+class MetaheuristicTest(unittest.TestCase):
+    def setUp(self):
+        self.board = generate_board(4, 10)
+        self.game = Game(self.board)
+
+    def test_initial_solution(self):
+        sol = ls_generate_initial(self.game)
+        b = board_from_solution(self.game, sol)
+        self.assertTrue(self.game.check_horizontal(b))
 
 
 if __name__ == '__main__':
