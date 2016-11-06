@@ -38,6 +38,9 @@ class BitsetTest(unittest.TestCase):
         self.assertNotEqual(a, b)
         b[0, 0] = True
         self.assertEqual(a, b)
+        c = Bitset(4, 3)
+        c[0, 0] = True
+        self.assertNotEqual(a, c)
 
     def test_save_load(self):
         a = self.bitset

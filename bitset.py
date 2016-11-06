@@ -59,7 +59,7 @@ class Bitset:
     def __eq__(self, other):
         if not isinstance(other, Bitset):
             return False
-        if self.rows != other.rows or self.columns != other.columns: return false
+        if self.rows != other.rows or self.columns != other.columns: return False
         return all((self.table == other.table).flatten())
 
     def save(self, filename: str):
