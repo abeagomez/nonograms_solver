@@ -1,7 +1,8 @@
 import unittest
 from bitset import Bitset
-from generator import generate_board, generate_game
+from generator import generate_board
 from game import Game
+from solvers import dfs_solve
 
 
 class BitsetTest(unittest.TestCase):
@@ -71,6 +72,16 @@ class GameTest(unittest.TestCase):
         game = Game(self.board)
         game.save('test_game')
         game = Game.load('test_game')
+
+
+class DFSTest(unittest.TestCase):
+    def setUp(self):
+        self.board = generate_board(4, 4)
+        self.game = Game(self.board)
+
+    def test_dfs_solve(self):
+        ans = dfs_solve(self.game)
+        self.assertTrue(self.game.check(ans))
 
 
 if __name__ == '__main__':
