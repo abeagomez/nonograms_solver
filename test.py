@@ -1,5 +1,7 @@
 import unittest
 from bitset import Bitset
+from generator import generate_board, generate_game
+from game import Game
 
 
 class BitsetTest(unittest.TestCase):
@@ -47,6 +49,28 @@ class BitsetTest(unittest.TestCase):
         a.save('test_board')
         b = Bitset.load('test_board')
         self.assertEqual(a, b)
+
+
+class GameTest(unittest.TestCase):
+    def setUp(self):
+        self.rows = 3
+        self.columns = 5
+        self.board = generate_board(self.rows, self.columns)
+
+    def test_generates_board(self):
+        self.assertEqual(self.rows, self.board.rows)
+        self.assertEqual(self.columns, self.board.columns)
+
+    def test_generate_game(self):
+        game = Game(self.board)
+        self.assertEqual(game.rows, self.rows)
+        self.assertEqual(game.columns, self.columns)
+        self.assertTrue(game.check(self.board))
+
+    def test_save_load(self):
+        game = Game(self.board)
+        game.save('test_game')
+        game = Game.load('test_game')
 
 
 if __name__ == '__main__':
