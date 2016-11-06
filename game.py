@@ -40,12 +40,21 @@ class Game:
             print(i)
 
     def check(self, board: Bitset):
-        l = np.array(generate_game(board))
-        k = np.array(self.lists)
-        b = (l == k)
-        if isinstance(b, np.bool_) or isinstance(b, bool):
-            return b
-        return all((l == k).flatten())
+        return self.check_horizontal(board) and self.check_vertical(board)
+
+    def check_horizontal(self, board: Bitset):
+        h, _ = np.array(generate_game(board))
+        k = np.array(self.lists[0])
+        b = (h == k)
+        if isinstance(b, bool): return b
+        return all(b.flatten())
+
+    def check_vertical(self, board: Bitset):
+        _, v = np.array(generate_game(board))
+        k = np.array(self.lists[1])
+        b = (v == k)
+        if isinstance(b, bool): return b
+        return all(b.flatten())
 
     def eval(self, board: Bitset):
         pass
@@ -56,4 +65,6 @@ if __name__ == '__main__':
     g = Game(b, 50, 4)
     g.save('pepe.game')
     g = Game.load('pepe.game')
+    print(g.check_horizontal(b))
+    print(g.check_vertical(b))
     print(g.check(b))

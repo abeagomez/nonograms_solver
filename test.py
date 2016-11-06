@@ -66,6 +66,8 @@ class GameTest(unittest.TestCase):
         game = Game(self.board)
         self.assertEqual(game.rows, self.rows)
         self.assertEqual(game.columns, self.columns)
+        self.assertTrue(game.check_horizontal(self.board))
+        self.assertTrue(game.check_vertical(self.board))
         self.assertTrue(game.check(self.board))
 
     def test_save_load(self):
