@@ -21,12 +21,6 @@ class Game:
         self.rows = n
         self.columns = m
 
-        # For iterative row generation only
-        self.last_changed_row = 0
-
-        # For random row generation only
-        self.max_random_generations = 10
-
     def increase_last_change(self):
         self.last_changed_row = (self.last_changed_row + 1) % self.rows
 
@@ -66,9 +60,6 @@ class Game:
         b = (v == k)
         if isinstance(b, bool): return b
         return all(b.flatten())
-
-    def eval(self, board: Bitset):
-        pass
 
 
 if __name__ == '__main__':

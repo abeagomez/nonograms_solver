@@ -3,8 +3,7 @@ from bitset import Bitset
 from generator import generate_board
 from game import Game
 from solvers import dfs_solve
-from ls import ls_generate_initial, board_from_solution, ls_generate_next, ls_generate_random_next, \
-    ls_generate_iterative_next
+from solution import LocalSearchSolution
 
 
 class BitsetTest(unittest.TestCase):
@@ -88,28 +87,34 @@ class DFSTest(unittest.TestCase):
         self.assertTrue(self.game.check(ans))
 
 
-class MetaheuristicTest(unittest.TestCase):
+class LocalSearchTest(unittest.TestCase):
     def setUp(self):
         self.board = generate_board(4, 10)
         self.game = Game(self.board)
+        self.sol = LocalSearchSolution(self.game)
 
     def test_initial_solution(self):
-        sol = ls_generate_initial(self.game)
-        b = board_from_solution(self.game, sol)
-        self.assertTrue(self.game.check_horizontal(b))
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
 
     def test_next_random_solution(self):
-        sol = ls_generate_initial(self.game)
-        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
-        ls_generate_random_next(self.game, sol)
-        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        self.sol.generate_random_next()
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        b = self.sol.board
+        self.sol.generate_random_next()
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        self.sol.go_back()
+        self.assertEqual(b, self.sol.board)
 
     def test_next_iterative_solution(self):
-        sol = ls_generate_initial(self.game)
-        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
-        ls_generate_iterative_next(self.game, sol)
-        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
-
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        self.sol.generate_iterative_next()
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        b = self.sol.board
+        self.sol.generate_iterative_next()
+        self.assertTrue(self.game.check_horizontal(self.sol.board))
+        self.sol.go_back()
+        self.assertEqual(b, self.sol.board)
 
 if __name__ == '__main__':
     unittest.main()
