@@ -45,15 +45,48 @@ def ls_generate_initial(game: Game):
     return solution
 
 
-def ls_generate_next(game: Game, solution: list):
+def ls_generate_random_next(game: Game, solution: list):
     i = rd.randint(0, len(solution) - 1)
+    gen = 1
+    ct = 0
+    while np.all(np.array(game.lists[0][i]) <= 1):
+        i = rd.randint(0, len(solution) - 1)
+        if ct == game.max_random_generations: return False
+        ct += 1
+
     while True:
         l = ls_generate_row(game.lists[0][i], game.columns)
         b = l == solution[i]
         if not np.all(b):
             solution[i] = l
-            return solution
+            return True
+        if ct == game.max_random_generations: return False
         i = rd.randint(0, len(solution) - 1)
+        ct += 1
+
+
+def ls_generate_iterative_next(game: Game, solution: list):
+    i = game.last_changed_row
+    initial_i = i
+    while np.all(np.array(game.lists[0][i]) <= 1):
+        game.increase_last_change()
+        i = game.last_changed_row
+        if i == initial_i: return False
+
+    while True:
+        l = ls_generate_row(game.lists[0][i], game.columns)
+        b = l == solution[i]
+        if not np.all(b):
+            solution[i] = l
+            return True
+        game.increase_last_change()
+        i = game.last_changed_row
+        if i == initial_i: return False
+
+
+def ls_generate_next(game: Game, solution: list):
+    ls_generate_random_next(game, solution)
+    # ls_generate_iterative_next(game, solution)
 
 
 def ls_eval(game: Game, board: Bitset):
@@ -61,7 +94,7 @@ def ls_eval(game: Game, board: Bitset):
 
 
 def ls_solve(game: Game):
-    pass
+    raise NotImplementedError()
 
 
 if __name__ == '__main__':

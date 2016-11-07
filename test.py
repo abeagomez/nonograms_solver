@@ -3,7 +3,8 @@ from bitset import Bitset
 from generator import generate_board
 from game import Game
 from solvers import dfs_solve
-from ls import ls_generate_initial, board_from_solution, ls_generate_next
+from ls import ls_generate_initial, board_from_solution, ls_generate_next, ls_generate_random_next, \
+    ls_generate_iterative_next
 
 
 class BitsetTest(unittest.TestCase):
@@ -97,10 +98,16 @@ class MetaheuristicTest(unittest.TestCase):
         b = board_from_solution(self.game, sol)
         self.assertTrue(self.game.check_horizontal(b))
 
-    def test_next_solution(self):
+    def test_next_random_solution(self):
         sol = ls_generate_initial(self.game)
         self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
-        ls_generate_next(self.game, sol)
+        ls_generate_random_next(self.game, sol)
+        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
+
+    def test_next_iterative_solution(self):
+        sol = ls_generate_initial(self.game)
+        self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
+        ls_generate_iterative_next(self.game, sol)
         self.assertTrue(self.game.check_horizontal(board_from_solution(self.game, sol)))
 
 

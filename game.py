@@ -21,6 +21,15 @@ class Game:
         self.rows = n
         self.columns = m
 
+        # For iterative row generation only
+        self.last_changed_row = 0
+
+        # For random row generation only
+        self.max_random_generations = 10
+
+    def increase_last_change(self):
+        self.last_changed_row = (self.last_changed_row + 1) % self.rows
+
     def save(self, filename: str):
         with open(filename, 'w')  as file:
             json.dump(
