@@ -1,16 +1,55 @@
 # Local search with multiple restarts implementation for solving a single Picross Problem.
-from bitset import Bitset
 from game import Game
-from generator import generate_game
-import numpy as np
-import random as rd
+from solution import LocalSearchSolution
 
 MAX_ITERATIONS = 10000
 
 
 def ls_solve(game: Game):
-    raise NotImplementedError()
+    it = 0
+    solution = LocalSearchSolution(game, next='iterative')
+    error = solution.eval()
+    while it < MAX_ITERATIONS and error > 0:
+        solution.next()
+        e = solution.eval()
+        if e > error:
+            solution.go_back()
+        else:
+            error = e
+        it += 1
+
+    return solution.board if error == 0 else None
+
+
+def lsmr_solve(game: Game):
+    it = 0
+    solution = LocalSearchSolution(game, next='iterative')
+    error = solution.eval()
+    ctr = 0
+    while it < MAX_ITERATIONS and error > 0:
+        solution.next()
+        e = solution.eval()
+        if e > error:
+            solution.go_back()
+            ctr += 1
+        else:
+            ctr = 0
+            error = e
+        if ctr == 1000:
+            print('Restart', error)
+            solution = LocalSearchSolution(game, next='iterative')
+            error = solution.eval()
+        it += 1
+
+    return solution.board if error == 0 else None
 
 
 if __name__ == '__main__':
-    pass
+    from generator import generate_board
+
+    b = generate_board(15, 15)
+    g = Game(b)
+    g.print()
+    print(b)
+    print('\n-----------------------\n')
+    print(lsmr_solve(g))

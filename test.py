@@ -116,5 +116,6 @@ class LocalSearchTest(unittest.TestCase):
         self.sol.go_back()
         self.assertEqual(b, self.sol.board)
 
+
 if __name__ == '__main__':
     unittest.main()

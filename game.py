@@ -16,7 +16,7 @@ class Game:
             n, m = board.rows, board.columns
         else:
             board = generate_board(n, m)
-            self.lists = generate_game(b)
+            self.lists = generate_game(board)
 
         self.rows = n
         self.columns = m

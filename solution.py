@@ -6,21 +6,52 @@ from generator import generate_game
 
 
 class LocalSearchSolution:
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, initial: str = 'random', next: str = 'random'):
         self.game = game
         self.lists = []
-        self.generate_initial()
+        self.generate_initial(initial)
         self.board_updated = False
         self._board = None
         self.max_random_generations = 10
         self.old_state = None
         self.last_changed_row = 0
+        self.next_type = next
 
     @property
     def board(self):
         if self._board and self.board_updated:
             return self._board
         return self.generate_board()
+
+    def leftmost(self):
+        solution = []
+        # Go through the horizontals
+        for line in self.game.lists[0]:
+            s = sum(line)
+            rem = self.game.columns - s
+            l = np.ones(len(line) + 1, int)
+            rem -= (len(line) - 1)
+            l[0] = 0
+            l[-1] = 0
+            l[-1] += rem
+            solution.append(l)
+
+        self.lists = solution
+
+    def rightmost(self):
+        solution = []
+        # Go through the horizontals
+        for line in self.game.lists[0]:
+            s = sum(line)
+            rem = self.game.columns - s
+            l = np.ones(len(line) + 1, int)
+            rem -= (len(line) - 1)
+            l[0] = 0
+            l[-1] = 0
+            l[0] += rem
+            solution.append(l)
+
+        self.lists = solution
 
     def generate_board(self):
         game = self.game
@@ -52,13 +83,18 @@ class LocalSearchSolution:
             rem -= 1
         return l
 
-    def generate_initial(self):
-        game = self.game
-        solution = []
-        # Go through the horizontals
-        for line in game.lists[0]:
-            solution.append(self.generate_row(line))
-        self.lists = solution
+    def generate_initial(self, kind: str):
+        if kind == 'leftmost':
+            self.leftmost()
+        elif kind == 'rightmost':
+            self.rightmost()
+        else:
+            game = self.game
+            solution = []
+            # Go through the horizontals
+            for line in game.lists[0]:
+                solution.append(self.generate_row(line))
+            self.lists = solution
 
     def generate_random_next(self):
         self.board_updated = False
@@ -106,8 +142,10 @@ class LocalSearchSolution:
             if i == initial_i: return False
 
     def next(self):
-        # return self.generate_iterative_next()
-        return self.generate_random_next()
+        if self.next_type == 'iterative':
+            return self.generate_iterative_next()
+        else:
+            return self.generate_random_next()
 
     def go_back(self):
         if self.old_state:
@@ -134,6 +172,10 @@ if __name__ == '__main__':
     board = generate_board(5, 5)
     game = Game(board)
     sol = LocalSearchSolution(game)
+    lsol = LocalSearchSolution(game, initial='leftmost')
+    rsol = LocalSearchSolution(game, initial='rightmost')
+    print('leftmost', lsol.board, sep='\n')
+    print('rightmost', rsol.board, sep='\n')
     board2 = sol.board
     game.print()
     print(board, board2, sep='\n\n')
