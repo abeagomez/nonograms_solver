@@ -19,6 +19,20 @@ def board_from_solution(game: Game, solution: list):
     return board
 
 
+def ls_generate_row(line: np.ndarray, count: int):
+    s = sum(line)
+    rem = count - s
+    l = np.ones(len(line) + 1, int)
+    rem -= (len(line) - 1)
+    l[0] = 0
+    l[-1] = 0
+    while rem > 0:
+        idx = rd.randint(0, len(l) - 1)
+        l[idx] += 1
+        rem -= 1
+    return l
+
+
 def ls_generate_initial(game: Game):
     columns = game.columns
 
@@ -26,23 +40,20 @@ def ls_generate_initial(game: Game):
 
     # Go through the horizontals
     for line in game.lists[0]:
-        s = sum(line)
-        rem = columns - s
-        l = np.ones(len(line) + 1, int)
-        rem -= (len(line) - 1)
-        l[0] = 0
-        l[-1] = 0
-        while rem > 0:
-            idx = rd.randint(0, len(l) - 1)
-            l[idx] += 1
-            rem -= 1
-        solution.append(l.tolist())
+        solution.append(ls_generate_row(line, columns))
 
     return solution
 
 
-def ls_generate_next(board: Bitset):
-    pass
+def ls_generate_next(game: Game, solution: list):
+    i = rd.randint(0, len(solution) - 1)
+    while True:
+        l = ls_generate_row(game.lists[0][i], game.columns)
+        b = l == solution[i]
+        if not np.all(b):
+            solution[i] = l
+            return solution
+        i = rd.randint(0, len(solution) - 1)
 
 
 def ls_eval(game: Game, board: Bitset):
@@ -57,16 +68,17 @@ if __name__ == '__main__':
     from generator import generate_board
 
     board = generate_board(5, 5)
-    # board = Bitset(2, 2)
-    # board[0, 1] = True
-    # board[1, 0] = True
     game = Game(board)
     sol = ls_generate_initial(game)
     board2 = board_from_solution(game, sol)
     game.print()
-    # board2 = Bitset(2, 2)
-    # board2[0, 1] = True
-    # board2[1, 1] = True
     print(board, board2, sep='\n\n')
     print(game.check_horizontal(board2))
-    print(game.check_vertical(board2))
+    print(game.check_vertical(board2), '\n')
+
+    ls_generate_next(game, sol)
+    print(board_from_solution(game, sol), '\n')
+    ls_generate_next(game, sol)
+    print(board_from_solution(game, sol), '\n')
+    ls_generate_next(game, sol)
+    print(board_from_solution(game, sol), '\n')
