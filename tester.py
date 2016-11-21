@@ -31,8 +31,9 @@ def check_with_time(count=int(1e2), size=15):
         f.write(str(run + 1))
 
     for size, l, b in boards:
+        density = calc_density(l[0], size)
         with open('test_cases/{}_{}_case'.format(run, idx), 'w') as f:
-            f.write('{}\n{}\n{}'.format(size, l[0], l[1]))
+            f.write('{}\n{}\n{}\n{}'.format(size, l[0], l[1], density))
         for i in l[0]:
             if len(i) == 0:
                 i.append(0)
@@ -52,8 +53,12 @@ def check_with_time(count=int(1e2), size=15):
         if sol1 is None or sol2 is None:
             print('ERROR - solution not found')
 
-        print('Case {}:\nCasillas {}\nFilas {}\n'.format(idx, tt, tt2))
+        print('Case {}:\nDensity {}\nFijando casillas {}\nFijando filas {}\n'.format(idx, density, tt, tt2))
         idx += 1
+
+
+def calc_density(restrictions, width):
+    return sum([sum(x) for x in restrictions]) / (width * width) * 100
 
 
 if __name__ == '__main__':
