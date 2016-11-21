@@ -29,20 +29,28 @@ def build_board(size):
 
 class problem:
     def __init__(self, restrictions_columns, restrictions_rows, size, board):
+        # Restricciones para las columnas
         self.restrictions_columns = restrictions_columns
+        # Restricciones para las filas
         self.restrictions_rows = restrictions_rows
+        # Tamano del tablero... so far es una matriz cuadrada
         self.size = size
+        # Tablero sobre el que se va a trabajar
         self.board = board
 
+    # Indice de la fila actual de tablero (comenzando por 0)
     def current_row_index(self, index):
         return index // self.size
 
+    # Indice de la columna actual de tablero (comenzando por 0)
     def current_column_index(self, index):
         return index % self.size
 
+    # Asigna un valor(value) a la casilla deseada del tablero(index)
     def set_value(self, index, value):
         self.board[self.current_row_index(index)][self.current_column_index(index)] = value
 
+    # devuelve la fila correspondiente a la posicion index del tablero
     def current_row(self, index):
         index = self.current_row_index(index)
         row = []
@@ -50,6 +58,7 @@ class problem:
             row.append(self.board[index][i])
         return row
 
+    # devuelce la columna correspondiente a la posicion index del tablero
     def current_column(self, index):
         index = self.current_column_index(index)
         column = []
@@ -57,28 +66,37 @@ class problem:
             column.append(self.board[i][index])
         return column
 
+    # Dada una posicion del tablero, comprueba la factibilidad de la columna y la fila correspondientes.
     def check_current_line(self, index):
-        # Check if previous line is OK
         if not self.check_previous_row(index): return False
         row = self.current_row(index)
         column = self.current_column(index)
         column_index = self.current_column_index(index)
         if row[column_index]:
-            if self.checkline(row, self.restrictions_rows[self.current_row_index(index)],
-                              self.current_column_index(index)) and self.checkline(column, self.restrictions_columns[
-                self.current_column_index(index)], self.current_row_index(index)):
+            if self.check_row_when_set_true(row, index) and self.check_column_when_set_true(column, index):
                 return True
         else:
-            if self.check_inFalse_line(row, self.restrictions_rows[self.current_row_index(index)],
-                                       self.current_column_index(index)) and self.check_inFalse_line(column,
-                                                                                                     self.restrictions_columns[
-                                                                                                         self.current_column_index(
-                                                                                                             index)],
-                                                                                                     self.current_row_index(
-                                                                                                         index)):
+            if self.check_row_when_set_false(row, index) and self.check_column_when_set_false(column, index):
                 return True
         return False
 
+    def check_row_when_set_true(self, row, index):
+        return self.checkline(row, self.restrictions_rows[self.current_row_index(index)],
+                              self.current_column_index(index))
+
+    def check_row_when_set_false(self, row, index):
+        return self.check_inFalse_line(row, self.restrictions_rows[self.current_row_index(index)],
+                                       self.current_column_index(index))
+
+    def check_column_when_set_true(self, column, index):
+        return self.checkline(column, self.restrictions_columns[self.current_column_index(index)],
+                              self.current_row_index(index))
+
+    def check_column_when_set_false(self, column, index):
+        return self.check_inFalse_line(column, self.restrictions_columns[self.current_column_index(index)],
+                                       self.current_row_index(index))
+
+    # Si una posicion del tablero es la primera de una fila, comprueba que la fila anterior quedo en un estado factible
     def check_previous_row(self, index):
         previous_row_index = self.current_row_index(index) - 1
         if self.current_column_index(index) is 0 and previous_row_index >= 0:
@@ -90,7 +108,6 @@ class problem:
 
     def check_rest_of_line(self, line, restrictions, line_blocks, index, mark):
         if mark:
-            # restriction number n
             n_res = restrictions[len(line_blocks) - 1]
             if n_res < line_blocks[-1]: return False
             rest = n_res - line_blocks[-1]
@@ -116,7 +133,8 @@ class problem:
     def check_inFalse_line(self, line, restrictions, index):
         result = self.simple_split(line)
         line_blocks = result[0]
-        # index = result[1]
+        if len(line_blocks) == 1 and result[1] > 0:
+            if line_blocks[0] is not restrictions[0]: return False
         for i in range(0, len(line_blocks) - 1):
             if restrictions[i] != line_blocks[i]: return False
         if not self.check_rest_of_line(line, restrictions, line_blocks, index, False): return False
@@ -125,12 +143,7 @@ class problem:
     def checkline(self, line, restrictions, index):
         result = self.simple_split(line)
         line_blocks = result[0]
-        # index = result[1]
-        # If I have more blocks than restrictions, return False
         if len(restrictions) < len(line_blocks): return False
-        # If I have a wrong-size block so far, return False
-        # Unnecesary condition so far...len(line_blocks) is always at least 1
-        # if len(line_blocks) > 0:
         for i in range(0, len(line_blocks) - 1):
             if restrictions[i] != line_blocks[i]: return False
         if not self.check_rest_of_line(line, restrictions, line_blocks, index, True): return False
@@ -193,7 +206,7 @@ def cdfs(size, restrictions_columns, restrictions_rows):
         if current_problem.check_board():
             current_problem.board
             return current_problem.board
-        if current_index > size * size:
+        if current_index >= size * size:
             continue
         p_right = problem(current_problem.restrictions_columns,
                           current_problem.restrictions_rows,
@@ -214,4 +227,5 @@ def cdfs(size, restrictions_columns, restrictions_rows):
     return []
 
 
-print(cdfs(3, [[2], [0], [1]], [[1, 1], [1], [0]]))
+if __name__ == '__main__':
+    print(cdfs(3, [[2], [0], [1]], [[1, 1], [1], [0]]))

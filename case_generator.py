@@ -2,10 +2,10 @@ from generator import generate_board
 from game import Game
 
 
-def generate_boards(n, size=10):
+def generate_boards(n, size=10, prob=0.5):
     l = []
     for i in range(n):
-        b = generate_board(size, size, 0.7)
+        b = generate_board(size, size, prob)
         p = Game(b)
         l.append((size, [p.lists[1], p.lists[0]], b))
     return l
