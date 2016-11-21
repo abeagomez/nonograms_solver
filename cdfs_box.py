@@ -191,7 +191,6 @@ def cdfs(size, restrictions_columns, restrictions_rows):
         current_problem = current_element[0]
         current_index = current_element[1]
         if current_problem.check_board():
-            print
             current_problem.board
             return current_problem.board
         if current_index > size * size:

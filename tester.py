@@ -1,5 +1,5 @@
 from case_generator import generate_boards
-from cdfs import cdfs
+from cdfs_box import cdfs
 from game import Game
 
 boards = generate_boards(10, 10)
