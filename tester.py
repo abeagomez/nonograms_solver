@@ -1,6 +1,7 @@
 from case_generator import generate_boards
 from cdfs_box import cdfs as cdfs_box
 from cdfs_rows import cdfs as cdfs_rows
+from pdfs import pdfs
 from game import Game
 import time
 
@@ -32,6 +33,7 @@ def check_with_time(count=int(1e2), size=15):
 
     for size, l, b in boards:
         density = calc_density(l[0], size)
+        print('Case {}:\nDensity {}'.format(idx, density))
         with open('test_cases/{}_{}_case'.format(run, idx), 'w') as f:
             f.write('{}\n{}\n{}\n{}'.format(size, l[0], l[1], density))
         for i in l[0]:
@@ -46,14 +48,17 @@ def check_with_time(count=int(1e2), size=15):
         t2 = time.time()
         sol2 = cdfs_rows(size, l[0], l[1])
         tt2 = time.time() - t2
+        t3 = time.time()
+        sol3 = pdfs(size, l[0], l[1])
+        tt3 = time.time() - t3
 
         with open('test_cases/{}_{}_result'.format(run, idx), 'w') as f:
-            f.write('{}\n{}'.format(str(tt), str(tt2)))
+            f.write('{}\n{}\n{}'.format(str(tt), str(tt2), str(tt3)))
 
-        if sol1 is None or sol2 is None:
+        if sol1 is None or sol2 is None or sol3 is None:
             print('ERROR - solution not found')
 
-        print('Case {}:\nDensity {}\nFijando casillas {}\nFijando filas {}\n'.format(idx, density, tt, tt2))
+        print('\nFijando casillas {}\nFijando filas {}\nProbabilista {}'.format(tt, tt2, tt3))
         idx += 1
 
 
