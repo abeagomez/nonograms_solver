@@ -34,24 +34,6 @@ class PriorityQueue:
         return str(self.heap)
 
 
-class Stack:
-    def __init__(self):
-        self.list = []
-        self.count = 0
-
-    def push(self, item):
-        self.list.append(item)
-        self.count += 1
-
-    def pop(self):
-        a = self.list.pop()
-        self.count -= 1
-        return a
-
-    def isEmpty(self):
-        return self.count == 0
-
-
 def matches(expanded_solution, constraints):
     """
     solution is a tuple of spaces, the output of solve1
@@ -119,17 +101,21 @@ def solutions(width, pattern, constraints=None):
 
 
 class Problem:
-    def __init__(self, column_restrictions, row_restrictions):
+    def __init__(self, column_restrictions, row_restrictions, another_problem=None):
         self.columns = column_restrictions
         self.rows = row_restrictions
         # Assuming square problems
         self.width = len(column_restrictions)
-        self.probabilities = None
-        self.board = -np.ones((self.width, self.width), np.int)
-        self.densities = PriorityQueue(True)
-        self.calculate_densities()
-        self.feasible_solutions = dict()
+        self.board = -np.ones((self.width, self.width), np.int) \
+            if another_problem is None else another_problem.board.copy()
+        self.densities = PriorityQueue(True) \
+            if another_problem is None else another_problem.densities
+        if another_problem is None:
+            self.calculate_densities()
         self.ok = True
+
+    def copy(self):
+        return Problem(self.columns, self.rows, self)
 
     def fix_line(self, line):
         i = line[0]
@@ -141,6 +127,7 @@ class Problem:
              for x in solutions(self.width, pattern, constrains)]
 
         if len(all_solutions) == 0:
+            print('WTF')
             self.ok = False
             return []
 
@@ -163,14 +150,26 @@ class Problem:
         s = set()
         while not self.densities.isEmpty() or len(s) != 0:
             line = self.densities.pop() if len(s) == 0 else s.pop()
-            line = self.fix_line(line)
-            for i in line:
+            l2 = self.fix_line(line)
+            for i in l2:
                 s.add(i)
+
+    def fix_pos(self, r, c):
+        s = set([(r, 'R'), (c, 'C')])
+        while len(s) != 0:
+            line = s.pop()
+            self.fix_line(line)
+            if not self.ok:
+                return False
+        return True
 
     def calculate_densities(self):
         for i in range(self.width):
             self.densities.push(sum(self.columns[i]) / self.width, (i, 'C'))
             self.densities.push(sum(self.rows[i]) / self.width, (i, 'R'))
+
+    def set_value(self, r, c, value):
+        self.board[r, c] = value
 
     def row(self, i):
         return self.board[i]
@@ -199,13 +198,49 @@ if __name__ == '__main__':
     from case_generator import generate_boards
     from pprint import pprint
 
-    a = generate_boards(1, 10, 0.3)
+    a = generate_boards(1, 5, 0.4)
     a = a[0]
     print(a[2])
+    print(a[1])
     p = Problem(a[1][0], a[1][1])
 
     # El caso que rompe el código de generar soluciones de Andy
     # p = Problem([[1], [1], [3], [3], [1, 1], [1, 4]], [[1], [2], [4], [2, 1], [2], [2, 1]])
 
+    # Uff que es esto????
+    # Fiu era que había copiado mal el caso siempre daba que no tenía solución.
+    #
+    # XX...
+    # XXX..
+    # X...X
+    # .XXX.
+    # ...XX
+    #
+    # p = Problem([[2], [2, 1], [1, 1], [2], [1, 1]], [[2], [3], [1, 1], [3], [2]])
+
+    # Este caso no adivina nada
+    #
+    # .....X....
+    # X..X.X...X
+    # .X....X..X
+    # .XX.X...XX
+    # .X.X.X....
+    # X...X....X
+    # X.X.X...X.
+    # .X........
+    # ....X.X.X.
+    # ....X.XX..
+    #
+
+    #
+    # .XX..
+    # .XX.X
+    # X...X
+    # ..X..
+    # X...X
+    #
+    # p = Problem([[1, 1], [2], [2, 1], [], [2, 1]], [[2], [2, 1], [1, 1], [1], [1, 1]])
+
     p.initial_fix()
     pprint(p.board)
+    print(p.ok)
