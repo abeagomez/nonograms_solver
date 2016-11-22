@@ -3,6 +3,7 @@ from cdfs_box import cdfs as cdfs_box
 from cdfs_rows import cdfs as cdfs_rows
 from pdfs import pdfs
 from game import Game
+import numpy as np
 import time
 
 
@@ -30,7 +31,7 @@ def check_with_time(count=int(1e2)):
     with open('test_cases/run', 'w') as f:
         f.write(str(run + 1))
     for s in range(5, 21):
-        for p in range(0, 1, 0.1):
+        for p in np.arange(0.1, 1., 0.1):
             boards = generate_boards(count, s, p)
             for size, l, b in boards:
                 density = calc_density(l[0], size)
