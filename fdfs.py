@@ -1,3 +1,5 @@
+# Shitty
+
 import numpy as np
 import heapq as heap
 from cdfs_rows import Stack
@@ -115,24 +117,20 @@ class Problem:
             self.calculate_densities()
         self.probabilities = dict() if another_problem is None else another_problem.probabilities.copy()
         self.ok = True
+        self.fixed = set() if another_problem is None else another_problem.fixed.copy()
         self.solutions = dict()
 
     def copy(self):
         return Problem(self.columns, self.rows, self)
 
-    def probable_box(self):
-        boxes = sorted(self.probabilities, key=lambda x: self.probabilities[x], reverse=True)
-        while True:
-            if len(boxes) == 0: break
-            b = boxes.pop(0)
-            if self.probabilities[b][0] != 1:
-                return b, self.probabilities[b][1]
-
     def fix_line(self, line):
         i = line[0]
         constrains = (self.row(i) if line[1] == 'R' else self.column(i)).copy()
-
-        all_solutions = self.all_solutions_for_line(line)
+        pattern = self.rows[i] if line[1] == 'R' else self.columns[i]
+        all_solutions = [np.array([0] * self.width)] if len(pattern) == 0 else \
+            [np.array(expand_solution(x, self.width, pattern))
+             for x in solutions(self.width, pattern, constrains)]
+        self.solutions[line] = all_solutions
 
         if len(all_solutions) == 0:
             # This is where we found a contradiction.
@@ -175,7 +173,7 @@ class Problem:
                 s.add(i)
 
     def fix_pos(self, r, c):
-        s = set([(r, 'R'), (c, 'C')])
+        s = {(r, 'R'), (c, 'C')}
         return self.fix_all(s)
 
     def calculate_densities(self):
@@ -221,17 +219,17 @@ class Problem:
     def boolean_board(self):
         return self.board == 1
 
+    def string_board(self):
+        return '\n'.join([''.join(['X' if b == 1 else ('.' if b == 0 else '?') for b in i]) for i in self.board]) + '\n'
+
     def all_solutions_for_line(self, line):
         pattern = self.rows[line[0]] if line[1] == 'R' else self.columns[line[0]]
-        restrictions = self.row(line[0]).copy() if line[1] == 'R' else self.column(line[0]).copy()
+        restrictions = (self.row(line[0]) if line[1] == 'R' else self.column(line[0])).copy()
 
-        if line in self.solutions:
-            all_solutions = self.solutions[line]
-        else:
-            all_solutions = [np.array([0] * self.width)] if len(pattern) == 0 else \
-                [np.array(expand_solution(x, self.width, pattern))
-                 for x in solutions(self.width, pattern, restrictions)]
-            self.solutions[line] = all_solutions
+        all_solutions = [np.array([0] * self.width)] if len(pattern) == 0 else \
+            [np.array(expand_solution(x, self.width, pattern))
+             for x in solutions(self.width, pattern, restrictions)]
+        self.solutions[line] = all_solutions
         return all_solutions
 
     def all_solutions(self):
@@ -239,14 +237,14 @@ class Problem:
         min = None
         for i in range(self.width):
             all_solutions = self.all_solutions_for_line((i, 'C'))
-            if len(all_solutions) < minsize:
+            if len(all_solutions) < minsize and not (i, 'C') in self.fixed:
                 minsize = len(all_solutions)
                 min = (i, 'C')
             self.solutions[(i, 'C')] = all_solutions
 
             all_solutions = self.all_solutions_for_line((i, 'R'))
             self.solutions[(i, 'R')] = all_solutions
-            if len(all_solutions) < minsize:
+            if len(all_solutions) < minsize and not (i, 'R') in self.fixed:
                 minsize = len(all_solutions)
                 min = (i, 'R')
 
@@ -256,16 +254,16 @@ class Problem:
 def fdfs(size, restrictions_columns, restrictions_rows):
     p = Problem(restrictions_columns, restrictions_rows)
     p.initial_fix()
-    pprint(p.board)
     stack = Stack()
     stack.push(p)
 
     while not stack.isEmpty():
         problem = stack.pop()
+        # print(problem.string_board())
         if problem.solved():
-            return problem.boolean_board()
+            return problem.string_board()
         min_line, minsize = problem.all_solutions()
-
+        print(min_line, minsize)
         if minsize == 0:
             continue
 
@@ -273,6 +271,7 @@ def fdfs(size, restrictions_columns, restrictions_rows):
             new_problem = problem.copy()
             new_problem.set_line(min_line, i)
             new_problem.fix_transpose(min_line[1])
+            new_problem.fixed.add(min_line)
             if new_problem.ok:
                 stack.push(new_problem)
 
@@ -330,20 +329,20 @@ if __name__ == '__main__':
     import time
 
     # Caso 3 - 5
-    t = time.time()
-    pprint(fdfs(15,
-                [[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
-                 [1, 1, 1, 1],
-                 [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
-                [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
-                 [1, 1, 1, 1, 1],
-                 [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]]
-                ))
-    print(time.time() - t)
+    # t = time.time()
+    # print(fdfs(15,
+    #             [[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
+    #              [1, 1, 1, 1],
+    #              [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
+    #             [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
+    #              [1, 1, 1, 1, 1],
+    #              [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]]
+    #             ))
+    # print(time.time() - t)
 
     # Caso 4 - 1
     # t = time.time()
-    # print(pdfs(15,
+    # print(fdfs(15,
     #            [[2, 1, 1, 1], [3], [1, 2], [1], [2, 1], [1], [1, 1], [1], [1], [1, 1, 1], [1, 2, 2, 1], [2, 1, 1], [1],
     #             [2, 1, 1, 1, 1], [3, 1, 1]],
     #            [[1, 2], [1, 1], [1, 1], [1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 2], [2, 3, 1], [2, 1, 1], [1, 1, 1, 1, 1],
@@ -352,11 +351,11 @@ if __name__ == '__main__':
     # print(time.time() - t)
 
     # Caso 1 - 13
-    # t = time.time()
-    # print(pdfs(15,
-    #            [[1, 5, 2], [1, 1, 2], [1, 1, 2, 1, 2], [2, 2], [2, 1, 1, 1], [1, 1, 1], [1, 1], [1, 1, 1], [2, 3, 1, 1],
-    #             [1, 2, 3, 1, 1], [1, 3, 1, 1], [2, 1, 1, 1], [1, 1, 1, 2, 1], [1, 1, 1, 2, 1], [2, 1]],
-    #            [[1, 2, 1, 1], [1, 1, 4], [2, 1], [1, 1, 1, 1, 2], [1, 3, 1, 1], [1, 2], [1, 1, 1, 1, 1, 1],
-    #             [1, 1, 1, 1, 1, 2], [1, 1, 2], [1, 2, 1, 1], [3, 1, 4], [1, 4, 1], [3], [3, 1, 1], [1, 2, 1]]
-    #            ))
-    # print(time.time() - t)
+    t = time.time()
+    print(fdfs(15,
+               [[1, 5, 2], [1, 1, 2], [1, 1, 2, 1, 2], [2, 2], [2, 1, 1, 1], [1, 1, 1], [1, 1], [1, 1, 1], [2, 3, 1, 1],
+                [1, 2, 3, 1, 1], [1, 3, 1, 1], [2, 1, 1, 1], [1, 1, 1, 2, 1], [1, 1, 1, 2, 1], [2, 1]],
+               [[1, 2, 1, 1], [1, 1, 4], [2, 1], [1, 1, 1, 1, 2], [1, 3, 1, 1], [1, 2], [1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 2], [1, 1, 2], [1, 2, 1, 1], [3, 1, 4], [1, 4, 1], [3], [3, 1, 1], [1, 2, 1]]
+               ))
+    print(time.time() - t)
