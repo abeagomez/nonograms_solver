@@ -54,11 +54,10 @@ def cdfs(width: int, col_rest: list, row_rest: list):
                 idx = row * width + i
 
                 if sol[i] is True:
-                    b = np.check_column_when_set_true(np.current_column(i), idx)
+                    res &= np.check_column_when_set_true(np.current_column(i), idx)
                 else:
-                    b = np.check_column_when_set_false(np.current_column(i), idx)
+                    res &= np.check_column_when_set_false(np.current_column(i), idx)
 
-                res &= b
                 if not res:
                     break
             if res:
@@ -70,9 +69,20 @@ def cdfs(width: int, col_rest: list, row_rest: list):
 
 if __name__ == '__main__':
     from case_generator import generate_boards
+    import time
 
-    for a in generate_boards(1, 15, 0.3):
-        pprint(cdfs(a[0], a[1][0], a[1][1]))
+    t = time.time()
+    pprint(cdfs(15, [[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
+                     [1, 1, 1, 1],
+                     [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
+                [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
+                 [1, 1, 1, 1, 1],
+                 [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]]
+                ))
+    print(time.time() - t)
+
+    # for a in generate_boards(1, 15, 0.3):
+    #     pprint(cdfs(a[0], a[1][0], a[1][1]))
 
 # print(a[2])
 #     print("""XX.X

@@ -1,5 +1,6 @@
 import numpy as np
 import heapq as heap
+from cdfs_rows import Stack
 
 
 class PriorityQueue:
@@ -112,10 +113,19 @@ class Problem:
             if another_problem is None else another_problem.densities
         if another_problem is None:
             self.calculate_densities()
+        self.probabilities = dict() if another_problem is None else another_problem.probabilities.copy()
         self.ok = True
 
     def copy(self):
         return Problem(self.columns, self.rows, self)
+
+    def probable_box(self):
+        boxes = sorted(self.probabilities, key=lambda x: self.probabilities[x], reverse=True)
+        while True:
+            if len(boxes) == 0: break
+            b = boxes.pop(0)
+            if self.probabilities[b][0] != 1:
+                return b, self.probabilities[b][1]
 
     def fix_line(self, line):
         i = line[0]
@@ -127,23 +137,31 @@ class Problem:
              for x in solutions(self.width, pattern, constrains)]
 
         if len(all_solutions) == 0:
-            print('WTF')
+            # This is where we found a contradiction.
             self.ok = False
             return []
 
-        ac = all_solutions[0]
-        equals = None
-        for sol in all_solutions[1:]:
-            equals = (ac == sol)
-            ac = -np.ones(self.width, np.int)
-            ac[equals] = sol[equals]
+        prob = np.mean((all_solutions), 0)
+        equals = np.array([x for x in map(lambda x: x == 0 or x == 1, prob)])
+        new_line = -np.ones(self.width, np.int)
+        new_line[equals] = all_solutions[0][equals]
+
+        for idx in range(self.width):
+            box = (line[0], idx) if line[1] == 'R' else (idx, line[0])
+            if not box in self.probabilities: self.probabilities[box] = (0, None)
+            p = prob[idx]
+            value = 1
+            if p < 0.5:
+                p = 1 - p
+                value = 0
+            self.probabilities[box] = max(self.probabilities[box], (p, value))
 
         if line[1] == 'R':
-            self.set_row(i, ac)
+            self.set_row(i, new_line)
         else:
-            self.set_column(i, ac)
+            self.set_column(i, new_line)
 
-        upd = np.array([x for x in range(self.width)])[ac != constrains]
+        upd = np.array([x for x in range(self.width)])[new_line != constrains]
         return [(x, y) for x, y in zip(upd, len(upd) * ['C' if line[1] == 'R' else 'R'])]
 
     def initial_fix(self):
@@ -170,6 +188,7 @@ class Problem:
 
     def set_value(self, r, c, value):
         self.board[r, c] = value
+        self.fix_pos(r, c)
 
     def row(self, i):
         return self.board[i]
@@ -193,15 +212,43 @@ class Problem:
         """
         self.board.T[i] = value
 
+    def solved(self):
+        return len(self.board[(self.board < 0)]) == 0
+
+    def boolean_board(self):
+        return self.board == 1
+
+
+def pdfs(size, restrictions_columns, restrictions_rows):
+    p = Problem(restrictions_columns, restrictions_rows)
+    p.initial_fix()
+    stack = Stack()
+    stack.push(p)
+
+    while not stack.isEmpty():
+        problem = stack.pop()
+        if problem.solved():
+            return problem.boolean_board()
+        (r, c), value = problem.probable_box()
+        for i in range(2):
+            new_problem = problem.copy()
+            new_problem.set_value(r, c, value)
+            if new_problem.ok:
+                stack.push(new_problem)
+            value ^= 1
+
+    return None
+
 
 if __name__ == '__main__':
     from case_generator import generate_boards
     from pprint import pprint
 
-    a = generate_boards(1, 5, 0.4)
+    size = 5
+    a = generate_boards(1, size, 0.4)
     a = a[0]
-    print(a[2])
-    print(a[1])
+    # print(a[2])
+    # pprint(a[1])
     p = Problem(a[1][0], a[1][1])
 
     # El caso que rompe el código de generar soluciones de Andy
@@ -241,6 +288,33 @@ if __name__ == '__main__':
     #
     # p = Problem([[1, 1], [2], [2, 1], [], [2, 1]], [[2], [2, 1], [1, 1], [1], [1, 1]])
 
-    p.initial_fix()
-    pprint(p.board)
-    print(p.ok)
+    # p = Problem(
+    # [[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1], [1, 1, 1, 1],
+    #  [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
+    # [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1], [1, 1, 1, 1, 1],
+    #  [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]]
+    # )
+
+    # print(pdfs(size, a[1][0], a[1][1]))
+
+    import time
+
+    t = time.time()
+    print(pdfs(15, [[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
+                    [1, 1, 1, 1],
+                    [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
+               [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
+                [1, 1, 1, 1, 1],
+                [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]]
+               ))
+    print(time.time() - t)
+
+    # Caso 1 - 13
+    # t = time.time()
+    # print(pdfs(15,
+    #            [[1, 5, 2], [1, 1, 2], [1, 1, 2, 1, 2], [2, 2], [2, 1, 1, 1], [1, 1, 1], [1, 1], [1, 1, 1], [2, 3, 1, 1],
+    #             [1, 2, 3, 1, 1], [1, 3, 1, 1], [2, 1, 1, 1], [1, 1, 1, 2, 1], [1, 1, 1, 2, 1], [2, 1]],
+    #            [[1, 2, 1, 1], [1, 1, 4], [2, 1], [1, 1, 1, 1, 2], [1, 3, 1, 1], [1, 2], [1, 1, 1, 1, 1, 1],
+    #             [1, 1, 1, 1, 1, 2], [1, 1, 2], [1, 2, 1, 1], [3, 1, 4], [1, 4, 1], [3], [3, 1, 1], [1, 2, 1]]
+    #            ))
+    # print(time.time() - t)
