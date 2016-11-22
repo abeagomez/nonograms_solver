@@ -106,7 +106,9 @@ def solutions(width, pattern, constraints=None):
         e = expand_solution((gap,), gap + p + 1, (p,))
         if not matches(e, constraints[:gap + p + 1]):
             continue
-        if len(pattern) == 1:
+        # if len(pattern) == 1:
+        # You have to check that there are no fixed boxes after the sole constrain.
+        if len(pattern) == 1 and np.all(constraints[gap + p + 1:] < 1):
             yield (gap,)
             continue
         subwidth = width - gap - p - 1
@@ -130,8 +132,6 @@ class Problem:
         self.ok = True
 
     def fix_line(self, line):
-        line = (2,'R')
-        self.board[2,5]=1
         i = line[0]
         constrains = (self.row(i) if line[1] == 'R' else self.column(i)).copy()
 
@@ -199,10 +199,13 @@ if __name__ == '__main__':
     from case_generator import generate_boards
     from pprint import pprint
 
-    a = generate_boards(1, 6, 0.5)
+    a = generate_boards(1, 10, 0.3)
     a = a[0]
     print(a[2])
-    # p = Problem(a[1][0], a[1][1])
-    p = Problem([[1], [1], [3], [3], [1, 1], [1, 4]], [[1], [2], [4], [2, 1], [2], [2, 1]])
+    p = Problem(a[1][0], a[1][1])
+
+    # El caso que rompe el código de generar soluciones de Andy
+    # p = Problem([[1], [1], [3], [3], [1, 1], [1, 4]], [[1], [2], [4], [2, 1], [2], [2, 1]])
+
     p.initial_fix()
     pprint(p.board)
