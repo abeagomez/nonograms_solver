@@ -1,17 +1,7 @@
 import numpy as np
 
 
-def expand_solution(solution, width, pattern):
-    """
-    expands a solution to a tuple of 1 (ON) and 0 (OFF)
-    """
-    r = []
-    for s, p in zip(solution, pattern):
-        r.extend([0] * s)
-        r.extend([1] * p)
-    r.extend([0] * (width - sum(solution) - sum(pattern)))
-    return tuple(r)
-
+# region Generate all solutions
 
 def matches(expanded_solution, constraints):
     """
@@ -30,7 +20,19 @@ def matches(expanded_solution, constraints):
     return True
 
 
-def solve2(width, pattern, constraints=None):
+def expand_solution(solution, width, pattern):
+    """
+    expands a solution to a tuple of 1 (ON) and 0 (OFF)
+    """
+    r = []
+    for s, p in zip(solution, pattern):
+        r.extend([0] * s)
+        r.extend([1] * p)
+    r.extend([0] * (width - sum(solution) - sum(pattern)))
+    return tuple(r)
+
+
+def solutions(width, pattern, constraints=None):
     """
     @width: int
     @pattern: sequence of ints
@@ -55,49 +57,150 @@ def solve2(width, pattern, constraints=None):
         e = expand_solution((gap,), gap + p + 1, (p,))
         if not matches(e, constraints[:gap + p + 1]):
             continue
-        if len(pattern) == 1:
+        # if len(pattern) == 1:
+        # You have to check that there are no fixed boxes after the sole constrain.
+        if len(pattern) == 1 and np.all(constraints[gap + p + 1:] < 1):
             yield (gap,)
             continue
         subwidth = width - gap - p - 1
         subpattern = pattern[1:]
         subconstraints = constraints[-subwidth:]
-        for s in solve2(subwidth, subpattern, subconstraints):
+        for s in solutions(subwidth, subpattern, subconstraints):
             yield (gap, s[0] + 1) + s[1:]
 
 
-def line_density(line):
-    line = np.array(line)
-    return len(line[line])
-
-
-def get_restrictions(width, pattern):
-    pass
-
+# endregion
 
 class Problem:
-    def __init__(self, columns_restrictions, rows_restrictions, board, fixed_positions):
-        self.columns_restrictions = columns_restrictions
-        self.rows_restrictions = rows_restrictions
-        self.columns_density = [line_density(x) for x in self.columns_restrictions]
-        self.rows_density = [line_density(x) for x in self.rows_restrictions]
-        self.size = len(columns_restrictions), len(rows_restrictions)
-        self.board = board
-        self.fixed_positions = fixed_positions
+    def __init__(self, column_restrictions, row_restrictions):
+        self.width = len(column_restrictions)
+        self.height = len(row_restrictions)
+        self.columns = column_restrictions
+        self.rows = row_restrictions
+        self.board = -np.ones((self.height, self.width), dtype=np.int8)
+        self.sol_row = None
+        self.sol_col = None
 
-    def valid_combinations(self, line):
-        pass
+    # region Line set and get
 
-    def sads(self):
-        c_index = np.argmax(self.columns_density)
-        r_index = np.argmax(self.rows_density)
-        line = self.columns_restrictions[c_index] \
-            if self.columns_density[c_index] > self.rows_density[r_index] \
-            else self.rows_restrictions[r_index]
+    def line(self, l):
+        return self.row(l[o]) if l[1] == 'R' else self.column(l[0])
 
-        combinations = self.valid_combinations(line)
+    def row(self, i):
+        return self.board[i]
+
+    def column(self, i):
+        return self.board.T[i]
+
+    def set_line(self, l, value):
+        if l[1] == 'R':
+            self.set_row(i, value)
+        else:
+            self.set_column(i, value)
+
+    def set_row(self, i, value):
+        self.board[i] = value[:]
+
+    def set_column(self, i, value):
+        self.board.T[i] = value[:]
+
+    def copy(self):
+        p = Problem(self.columns, self.rows)
+        p.board = self.board.copy()
+        return p
+
+    # endregion
+
+    def fix_all(self):
+        sol_row = [None for i in range(self.height)]
+        sol_col = [None for i in range(self.width)]
+        while True:
+            changed = False
+            for i in range(self.width):
+                pattern = self.columns[i]
+                constrains = self.column(i)
+                sol_col[i] = []
+                inv = None
+                for sol in solutions(self.height, pattern, constrains):
+                    e = np.array(expand_solution(sol, self.height, pattern))
+                    sol_col[i].append(e)
+                    e = e.copy()
+                    if inv is None:
+                        inv = e
+                    else:
+                        different = np.logical_not(inv == e)
+                        inv[different] = -np.ones(len(inv[different]))
+                    if inv is not None and np.all(inv == -1):
+                        break
+                if np.any(inv != constrains):
+                    self.set_column(i, inv)
+                    changed = True
+
+            for i in range(self.height):
+                pattern = self.rows[i]
+                constrains = self.row(i)
+                sol_row[i] = []
+                inv = None
+                for sol in solutions(self.width, pattern, constrains):
+                    e = np.array(expand_solution(sol, self.width, pattern))
+                    sol_row[i].append(e)
+                    e = e.copy()
+                    if inv is None:
+                        inv = e
+                    else:
+                        different = np.logical_not(inv == e)
+                        inv[different] = -np.ones(len(inv[different]))
+                    if inv is not None and np.all(inv == -1):
+                        break
+                if np.any(constrains != inv):
+                    self.set_row(i, inv)
+                    changed = True
+
+            if not changed: break
+        self.sol_row, self.sol_col = sol_row, sol_col
+        return sol_col, sol_row
+
+    def solve(self):
+        self.fix_all()
+        sizes_col = [x for x in map(len, self.sol_col)]
+        sizes_row = [x for x in map(len, self.sol_row)]
+        min_col = min(sizes_col)
+        min_row = min(sizes_row)
+
+        if min_col == 0 or min_row == 0:
+            return False
+
+        if max(sizes_col) == 1 and max(sizes_row) == 1:
+            return True
+
+        min_col = min([(x, i) for i, x in enumerate(sizes_col) if x > 1])
+        min_row = min([(x, i) for i, x in enumerate(sizes_row) if x > 1])
+
+        if min_col < min_row:
+            idx = min_col[1]
+            for sol in self.sol_col[idx]:
+                p = self.copy()
+                p.set_column(idx, sol)
+                if p.solve():
+                    return True
+
+        else:
+            idx = min_row[1]
+            for sol in self.sol_row[idx]:
+                p = self.copy()
+                p.set_row(idx, sol)
+                if p.solve():
+                    return True
 
 
 if __name__ == '__main__':
-    rest = [2, 3, 2]
-    for i in solve2(10, rest, []):
-        print(expand_solution(i, 10, rest))
+    from pprint import pprint
+    import time
+
+    t = time.time()
+    p = Problem([[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
+                 [1, 1, 1, 1], [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
+                [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
+                 [1, 1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]])
+    print(p.solve())
+    print(time.time() - t)
