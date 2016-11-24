@@ -119,11 +119,12 @@ class Problem:
             for i in range(self.width):
                 pattern = self.columns[i]
                 constrains = self.column(i)
-                sol_col[i] = []
+                # sol_col[i] = []
                 inv = None
+                count = 0
                 for sol in solutions(self.height, pattern, constrains):
                     e = np.array(expand_solution(sol, self.height, pattern))
-                    sol_col[i].append(e)
+                    # sol_col[i].append(e)
                     e = e.copy()
                     if inv is None:
                         inv = e
@@ -132,6 +133,8 @@ class Problem:
                         inv[different] = -np.ones(len(inv[different]))
                     if inv is not None and np.all(inv == -1):
                         break
+                    count += 1
+                sol_col[i] = count
                 if np.any(inv != constrains):
                     self.set_column(i, inv)
                     changed = True
@@ -139,11 +142,12 @@ class Problem:
             for i in range(self.height):
                 pattern = self.rows[i]
                 constrains = self.row(i)
-                sol_row[i] = []
+                # sol_row[i] = []
                 inv = None
+                count = 0
                 for sol in solutions(self.width, pattern, constrains):
                     e = np.array(expand_solution(sol, self.width, pattern))
-                    sol_row[i].append(e)
+                    # sol_row[i].append(e)
                     e = e.copy()
                     if inv is None:
                         inv = e
@@ -152,20 +156,24 @@ class Problem:
                         inv[different] = -np.ones(len(inv[different]))
                     if inv is not None and np.all(inv == -1):
                         break
+                    count += 1
+                sol_row[i] = count
                 if np.any(constrains != inv):
                     self.set_row(i, inv)
                     changed = True
 
             if not changed: break
-        self.sol_row, self.sol_col = sol_row, sol_col
+        # self.sol_row, self.sol_col = sol_row, sol_col
         return sol_col, sol_row
 
     def solve(self):
-        self.fix_all()
-        sizes_col = [x for x in map(len, self.sol_col)]
-        sizes_row = [x for x in map(len, self.sol_row)]
-        min_col = min(sizes_col)
-        min_row = min(sizes_row)
+        sc, sr = self.fix_all()
+        # sizes_col = [x for x in map(len, sc)]
+        # sizes_row = [x for x in map(len, st)]
+        sizes_col = sc
+        sizes_row = sr
+        min_col = min(sc)
+        min_row = min(sr)
 
         if min_col == 0 or min_row == 0:
             return False
@@ -178,19 +186,23 @@ class Problem:
 
         if min_col < min_row:
             idx = min_col[1]
-            for sol in self.sol_col[idx]:
+            # for sol in self.sol_col[idx]:
+            for sol in solutions(self.height, self.columns[idx], self.column(idx)):
                 p = self.copy()
-                p.set_column(idx, sol)
+                p.set_column(idx, expand_solution(sol, self.height, self.columns[idx]))
                 if p.solve():
                     return True
 
         else:
             idx = min_row[1]
-            for sol in self.sol_row[idx]:
+            # for sol in self.sol_row[idx]:
+            for sol in solutions(self.width, self.rows[idx], self.row(idx)):
                 p = self.copy()
-                p.set_row(idx, sol)
+                p.set_row(idx, expand_solution(sol, self.width, self.rows[idx]))
                 if p.solve():
                     return True
+
+        return False
 
 
 if __name__ == '__main__':
