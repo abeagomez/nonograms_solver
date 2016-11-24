@@ -112,10 +112,9 @@ class Problem:
 
     def fix_all(self):
         while True:
-            sol_row = [0] * self.height
             sol_col = [0] * self.width
+            sol_row = [0] * self.height
             changed = False
-
             for i in range(self.width):
                 pattern = self.columns[i]
                 constrains = self.column(i)
@@ -128,8 +127,6 @@ class Problem:
                     for y, ex in enumerate(e):
                         if inv[y] != ex:
                             inv[y] = -1
-                    if inv is not None and all([x == -1 for x in inv]):
-                        break
                     count += 1
                 sol_col[i] = count
                 if inv is not None and self.column(i) != inv:
@@ -148,8 +145,6 @@ class Problem:
                     for y, ex in enumerate(e):
                         if inv[y] != ex:
                             inv[y] = -1
-                    if inv is not None and all([x == -1 for x in inv]):
-                        break
                     count += 1
                 sol_row[i] = count
                 if inv is not None and self.row(i) != inv:
@@ -159,38 +154,32 @@ class Problem:
         return sol_col, sol_row
 
     def solve(self):
-        sc, sr = self.fix_all()
-        sizes_col = sc
-        sizes_row = sr
-        min_col = min(sc)
-        min_row = min(sr)
+        sizes_col, sizes_row = self.fix_all()
+        min_col = min(sizes_col)
+        min_row = min(sizes_row)
 
         if min_col == 0 or min_row == 0:
-            return False
+            return None
 
         if max(sizes_col) == 1 and max(sizes_row) == 1:
-            return True
+            return self.board
 
-        min_col = min([(x, i) for i, x in enumerate(sizes_col) if x > 1])
-        min_row = min([(x, i) for i, x in enumerate(sizes_row) if x > 1])
+        min_col, x = min([(x, i) for i, x in enumerate(sizes_col) if x > 1])
+        min_row, y = min([(x, i) for i, x in enumerate(sizes_row) if x > 1])
 
         if min_col < min_row:
-            idx = min_col[1]
-            for sol in solutions(self.height, self.columns[idx], self.column(idx)):
+            for sol in solutions(self.height, self.columns[x], self.column(x)):
                 p = self.copy()
-                p.set_column(idx, expand_solution(sol, self.height, self.columns[idx]))
-                if p.solve():
-                    return True
+                p.set_column(x, expand_solution(sol, self.height, self.columns[x]))
+                r = p.solve()
+                if r: return r
 
         else:
-            idx = min_row[1]
-            for sol in solutions(self.width, self.rows[idx], self.row(idx)):
+            for sol in solutions(self.width, self.rows[y], self.row(y)):
                 p = self.copy()
-                p.set_row(idx, expand_solution(sol, self.width, self.rows[idx]))
-                if p.solve():
-                    return True
-
-        return False
+                p.set_row(y, expand_solution(sol, self.width, self.rows[y]))
+                r = p.solve()
+                if r: return r
 
 
 if __name__ == '__main__':
@@ -198,9 +187,11 @@ if __name__ == '__main__':
     import time
 
     t = time.time()
-    p = Problem([[2, 1], [2, 1, 1], [1, 1, 1, 1], [2, 1], [1, 1, 1], [1, 1, 1, 1], [3], [3, 2, 1], [1, 1, 3, 1],
-                 [1, 1, 1, 1], [1, 2, 1, 1, 1], [1, 1, 1, 1], [1, 2, 1], [1], [1, 4, 1]],
-                [[1, 2, 1], [1, 3, 1], [1, 1, 3], [1, 1, 1], [1, 1], [1, 1], [1, 2, 1, 1, 1], [2, 3, 3, 1, 1],
-                 [1, 1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1], [1, 2], [1, 1], [1, 1, 1]])
-    print(p.solve())
+    p = Problem(
+        [[1, 5, 2], [1, 1, 2], [1, 1, 2, 1, 2], [2, 2], [2, 1, 1, 1], [1, 1, 1], [1, 1], [1, 1, 1], [2, 3, 1, 1],
+         [1, 2, 3, 1, 1], [1, 3, 1, 1], [2, 1, 1, 1], [1, 1, 1, 2, 1], [1, 1, 1, 2, 1], [2, 1]],
+        [[1, 2, 1, 1], [1, 1, 4], [2, 1], [1, 1, 1, 1, 2], [1, 3, 1, 1], [1, 2], [1, 1, 1, 1, 1, 1],
+         [1, 1, 1, 1, 1, 2], [1, 1, 2], [1, 2, 1, 1], [3, 1, 4], [1, 4, 1], [3], [3, 1, 1], [1, 2, 1]]
+    )
+    pprint(p.solve())
     print(time.time() - t)
