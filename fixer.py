@@ -1,6 +1,3 @@
-import numpy as np
-
-
 # region Generate all solutions
 
 def matches(expanded_solution, constraints):
@@ -54,12 +51,12 @@ def solutions(width, pattern, constraints=None):
     maxgap = width - sum(pattern[1:]) - (len(pattern) - 1) - p
 
     for gap in range(maxgap + 1):
-        e = expand_solution((gap,), gap + p + 1, (p,))
-        if not matches(e, constraints[:gap + p + 1]):
+        # constraint width
+        cw = (gap + p + 1) if len(pattern) > 1 else width
+        e = expand_solution((gap,), cw, (p,))
+        if not matches(e, constraints[:cw]):
             continue
-        # if len(pattern) == 1:
-        # You have to check that there are no fixed boxes after the sole constrain.
-        if len(pattern) == 1 and np.all(constraints[gap + p + 1:] < 1):
+        if len(pattern) == 1:
             yield (gap,)
             continue
         subwidth = width - gap - p - 1
@@ -77,7 +74,7 @@ class Problem:
         self.height = len(row_restrictions)
         self.columns = column_restrictions
         self.rows = row_restrictions
-        self.board = -np.ones((self.height, self.width), dtype=np.int8)
+        self.board = [[-1] * self.width for i in range(self.height)]
         self.sol_row = None
         self.sol_col = None
 
@@ -90,7 +87,7 @@ class Problem:
         return self.board[i]
 
     def column(self, i):
-        return self.board.T[i]
+        return [self.board[x][i] for x in range(self.height)]
 
     def set_line(self, l, value):
         if l[1] == 'R':
@@ -99,77 +96,70 @@ class Problem:
             self.set_column(i, value)
 
     def set_row(self, i, value):
-        self.board[i] = value[:]
+        self.board[i] = list(value[:])
 
     def set_column(self, i, value):
-        self.board.T[i] = value[:]
+        for x in range(self.height):
+            self.board[x][i] = value[x]
 
     def copy(self):
         p = Problem(self.columns, self.rows)
-        p.board = self.board.copy()
+        for i in range(self.height):
+            p.board[i] = self.board[i][:]
         return p
 
     # endregion
 
     def fix_all(self):
-        sol_row = [None for i in range(self.height)]
-        sol_col = [None for i in range(self.width)]
         while True:
+            sol_row = [0] * self.height
+            sol_col = [0] * self.width
             changed = False
+
             for i in range(self.width):
                 pattern = self.columns[i]
                 constrains = self.column(i)
-                # sol_col[i] = []
                 inv = None
                 count = 0
                 for sol in solutions(self.height, pattern, constrains):
-                    e = np.array(expand_solution(sol, self.height, pattern))
-                    # sol_col[i].append(e)
-                    e = e.copy()
+                    e = list(expand_solution(sol, self.height, pattern))
                     if inv is None:
                         inv = e
-                    else:
-                        different = np.logical_not(inv == e)
-                        inv[different] = -np.ones(len(inv[different]))
-                    if inv is not None and np.all(inv == -1):
+                    for y, ex in enumerate(e):
+                        if inv[y] != ex:
+                            inv[y] = -1
+                    if inv is not None and all([x == -1 for x in inv]):
                         break
                     count += 1
                 sol_col[i] = count
-                if np.any(inv != constrains):
+                if inv is not None and self.column(i) != inv:
                     self.set_column(i, inv)
                     changed = True
 
             for i in range(self.height):
                 pattern = self.rows[i]
                 constrains = self.row(i)
-                # sol_row[i] = []
                 inv = None
                 count = 0
                 for sol in solutions(self.width, pattern, constrains):
-                    e = np.array(expand_solution(sol, self.width, pattern))
-                    # sol_row[i].append(e)
-                    e = e.copy()
+                    e = list(expand_solution(sol, self.width, pattern))
                     if inv is None:
                         inv = e
-                    else:
-                        different = np.logical_not(inv == e)
-                        inv[different] = -np.ones(len(inv[different]))
-                    if inv is not None and np.all(inv == -1):
+                    for y, ex in enumerate(e):
+                        if inv[y] != ex:
+                            inv[y] = -1
+                    if inv is not None and all([x == -1 for x in inv]):
                         break
                     count += 1
                 sol_row[i] = count
-                if np.any(constrains != inv):
+                if inv is not None and self.row(i) != inv:
                     self.set_row(i, inv)
                     changed = True
-
             if not changed: break
-        # self.sol_row, self.sol_col = sol_row, sol_col
         return sol_col, sol_row
 
     def solve(self):
         sc, sr = self.fix_all()
-        # sizes_col = [x for x in map(len, sc)]
-        # sizes_row = [x for x in map(len, st)]
         sizes_col = sc
         sizes_row = sr
         min_col = min(sc)
@@ -186,7 +176,6 @@ class Problem:
 
         if min_col < min_row:
             idx = min_col[1]
-            # for sol in self.sol_col[idx]:
             for sol in solutions(self.height, self.columns[idx], self.column(idx)):
                 p = self.copy()
                 p.set_column(idx, expand_solution(sol, self.height, self.columns[idx]))
@@ -195,7 +184,6 @@ class Problem:
 
         else:
             idx = min_row[1]
-            # for sol in self.sol_row[idx]:
             for sol in solutions(self.width, self.rows[idx], self.row(idx)):
                 p = self.copy()
                 p.set_row(idx, expand_solution(sol, self.width, self.rows[idx]))
