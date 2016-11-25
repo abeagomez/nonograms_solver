@@ -2,3 +2,5 @@
 __pycache__/
 .DS_Store
 test_cases/
+test_case
+results/

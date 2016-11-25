@@ -40,7 +40,8 @@ def solutions(width, pattern, constraints=None):
     """
 
     if len(pattern) == 0:
-        return tuple()
+        yield tuple()
+        return
 
     if constraints is None:
         constraints = [-1] * width
@@ -180,6 +181,11 @@ class Problem:
                 p.set_row(y, expand_solution(sol, self.width, self.rows[y]))
                 r = p.solve()
                 if r: return r
+
+
+def fdfs(width: int, col_rest: list, row_rest: list):
+    p = Problem(col_rest, row_rest)
+    return p.solve()
 
 
 if __name__ == '__main__':

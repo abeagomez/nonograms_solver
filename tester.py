@@ -3,8 +3,10 @@ from cdfs_box import cdfs as cdfs_box
 from cdfs_rows import cdfs as cdfs_rows
 from pdfs import pdfs
 from game import Game
+import subprocess
 import numpy as np
 import time
+import json
 
 
 def simple_check():
@@ -68,5 +70,57 @@ def calc_density(restrictions, width):
     return sum([sum(x) for x in restrictions]) / (width * width) * 100
 
 
+def generate_cases(count=int(1e3)):
+    idx = 0
+    for s in range(5, 21):
+        cases = []
+        for p in np.arange(0.1, 1., 0.1):
+            print(p)
+            boards = generate_boards(count, s, p)
+            for size, l, b in boards:
+                density = calc_density(l[0], size)
+                a = {'list': l, 'density': density}
+                cases.append(a)
+            print('generated all cases')
+        with open('test_cases/cases_{}.json'.format(idx), 'w') as f:
+            json.dump(cases, f)
+        idx += 1
+
+
+def check_with_timeout(method, timeout):
+    res = subprocess.run(['time', 'gtimeout', str(timeout), 'python', 'wrapper.py', method, 'test_case'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    if res.returncode != 0:
+        print(res.stderr)
+        return timeout, False
+    time = float(res.stderr.strip().split()[0])
+    result = eval(res.stdout.strip()) if res.returncode == 0 else False
+    return time, result
+
+
 if __name__ == '__main__':
-    check_with_time()
+    from wrapper import methods
+
+    for i in range(16):
+        print(i)
+        for key in methods.keys():
+            print(key)
+            timeout = methods[key][2]
+            with open('test_cases/cases_{}.json'.format(i)) as f:
+                test_cases = json.load(f)
+            print(len(test_cases))
+            all_fail = True
+            times = []
+            results = []
+            for c, case in enumerate(test_cases):
+                with open('test_case', 'w') as f:
+                    json.dump(case['list'], f)
+                t, result = check_with_timeout(key, timeout)
+                print(c, t, result)
+                times.append(t)
+                results.append(result)
+                all_fail &= not result
+            with open('results/{}_{}'.format(key, i), 'w') as f:
+                json.dump([x for x in zip(times, results)], f)
+            if all_fail: break

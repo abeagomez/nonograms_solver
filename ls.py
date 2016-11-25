@@ -2,7 +2,12 @@
 from game import Game
 from solution import LocalSearchSolution
 
-MAX_ITERATIONS = 10000
+MAX_ITERATIONS = 100000
+
+
+def ls(width: int, col_rest: list, row_rest: list):
+    game = Game(None, width, width, lists=[row_rest, col_rest])
+    return ls_solve(game)
 
 
 def ls_solve(game: Game):
@@ -19,6 +24,11 @@ def ls_solve(game: Game):
         it += 1
 
     return solution.board if error == 0 else None
+
+
+def lsmr(width: int, col_rest: list, row_rest: list):
+    game = Game(None, width, width, lists=[row_rest, col_rest])
+    return lsmr_solve(game)
 
 
 def lsmr_solve(game: Game):

@@ -3,6 +3,7 @@
 from game import Game
 from solution import LocalSearchSolution
 import random as rd
+import numpy as np
 
 MAX_ITERATIONS = 100001
 T0 = 50
@@ -36,6 +37,11 @@ def sa_solve(game: Game, error_list: list = [], tlist: list = [], plist: list = 
         it += 1
 
     return solution.board if error == 0 else None
+
+
+def sa(width: int, col_rest: list, row_rest: list):
+    game = Game(None, width, width, lists=[row_rest, col_rest])
+    return sa_solve(game)
 
 
 if __name__ == '__main__':
