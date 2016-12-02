@@ -13,45 +13,54 @@ def build_board(size):
 
 class problem:
 	def __init__(self, restrictions_columns, restrictions_rows, size, board):
-		#Restricciones para las columnas
 		self.restrictions_columns = restrictions_columns
-		#Restricciones para las filas
 		self.restrictions_rows = restrictions_rows
-		#Tamano del tablero... so far es una matriz cuadrada
+		#Square board so far...
 		self.size = size
-		#Tablero sobre el que se va a trabajar
 		self.board = board
 	
-	#Indice de la fila actual de tablero (comenzando por 0)
 	def current_row_index(self, index):
+		"""
+		current row index (starting by 0)
+		"""
 		return index//self.size
 
-	#Indice de la columna actual de tablero (comenzando por 0)
 	def current_column_index(self, index):
+		"""
+		current column index (starting by 0)
+		"""
 		return index%self.size
 
-	#Asigna un valor(value) a la casilla deseada del tablero(index)
 	def set_value(self, index, value):
+		"""
+		assign "value" to the nth(index) box of the board  
+		"""
 		self.board[self.current_row_index(index)][self.current_column_index(index)] = value
 
-	#devuelve la fila correspondiente a la posicion index del tablero
 	def current_row(self, index):
+		"""
+		returns the row corresponding to the current index
+		"""
 		index = self.current_row_index(index)
 		row = []
 		for i in range(0, self.size):
 			row.append(self.board[index][i])
 		return row
 
-	#devuelce la columna correspondiente a la posicion index del tablero
 	def current_column(self, index):
+		"""
+		returns the column corresponding to the current index
+		"""
 		index = self.current_column_index(index)
 		column = []
 		for i in range(0, self.size):
 			column.append(self.board[i][index])
 		return column
 
-	#Dada una posicion del tablero, comprueba la factibilidad de la columna y la fila correspondientes.
 	def check_current_line(self, index):
+		"""
+		check the feasibility of the row and column corresponding to the nth(index) position of the board.
+		"""
 		if not self.check_previous_row(index): return False
 		row = self.current_row(index)
 		column = self.current_column(index)
@@ -76,7 +85,6 @@ class problem:
 	def check_column_when_set_false(self, column, index):
 		return self.check_inFalse_line(column, self.restrictions_columns[self.current_column_index(index)], self.current_row_index(index))
 
-	#Si una posicion del tablero es la primera de una fila, comprueba que la fila anterior quedo en un estado factible
 	def check_previous_row(self, index):
 		previous_row_index = self.current_row_index(index) - 1
 		if self.current_column_index(index) is 0 and previous_row_index >= 0:
@@ -130,6 +138,9 @@ class problem:
 		return True
 	
 	def check_board(self):
+		"""
+		verify that the board is in a valid final state
+		"""
 		for i in range(0, self.size):
 			column = self.current_column(i)
 			if not self.check_whole_line(column, self.restrictions_columns[i]): return False
@@ -138,6 +149,9 @@ class problem:
 		return True
 		
 	def simple_split(self, line):
+		"""
+		returns a list with the size of blocks that have already been marked.
+		"""
 		split_blocks = []
 		current = 0
 		n = 0
@@ -157,6 +171,9 @@ class problem:
 		return (split_blocks, index)
 
 	def check_whole_line(self, line, restrictions):
+		"""
+		verify that the entire line is in a valid configuration
+		"""
 		line_blocks = self.simple_split(line)[0]
 		if len(line_blocks) != len(restrictions): return False
 		for i in range(0, len(restrictions)):
