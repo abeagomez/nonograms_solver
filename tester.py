@@ -102,7 +102,7 @@ def check_with_timeout(method, timeout):
 if __name__ == '__main__':
     from wrapper import methods
 
-    for i in range(16):
+    for i in range(8, 16):
         print(i)
         for key in methods.keys():
             print(key)

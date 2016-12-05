@@ -11,8 +11,8 @@ from sa import sa
 
 methods = {
     # 'dfs': (dfs, 'Simple dfs', 30),
-    'rcdfs': (rcdfs, 'Dfs con restricciones fijando filas completas.', 120),
-    'bcdfs': (bcdfs, 'Dfs con restricciones fijando casilla por casilla', 120),
+    # 'rcdfs': (rcdfs, 'Dfs con restricciones fijando filas completas.', 120),
+    # 'bcdfs': (bcdfs, 'Dfs con restricciones fijando casilla por casilla', 120),
     'pdfs': (pdfs, 'Dfs con restricciones + invariantes fijando por casillas', 120),
     'fdfs': (fdfs, 'Dfs con restricciones + invariantes fijando por filas', 120),
     # 'ls': (ls, 'Local search', 5),
